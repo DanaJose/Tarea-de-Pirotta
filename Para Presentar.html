@@ -1,0 +1,556 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+#cr{width:100%;height:680px;position:relative;overflow:hidden;font-family:'Space Mono',monospace;cursor:grab;}
+#cr.dragging{cursor:grabbing;}
+#bg,#cv{position:absolute;top:0;left:0;width:100%;height:100%;}
+.scan{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 3px);pointer-events:none;z-index:5;}
+.hdr{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:8px;color:rgba(255,255,255,0.18);pointer-events:none;white-space:nowrap;z-index:10;}
+
+/* MODE BANNER */
+.mode-banner{position:absolute;top:38px;left:50%;transform:translateX(-50%);
+  font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:5px;
+  padding:4px 18px;border-radius:2px;
+  transition:all .5s;pointer-events:none;white-space:nowrap;z-index:10;
+  opacity:0;}
+.mode-banner.show{opacity:1;}
+
+/* HINT */
+.hint{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);
+  font-size:8px;letter-spacing:2px;color:rgba(255,255,255,0.25);
+  pointer-events:none;z-index:10;white-space:nowrap;transition:opacity .5s;}
+
+/* INDEX */
+.idx{position:absolute;bottom:16px;left:16px;display:flex;flex-direction:column;gap:5px;z-index:20;}
+.ix{display:flex;align-items:center;gap:9px;cursor:pointer;padding:5px 11px;
+  border-radius:2px;border:1px solid rgba(255,255,255,0.07);
+  transition:all 0.2s;font-size:9px;letter-spacing:2px;
+  color:rgba(255,255,255,0.3);background:rgba(0,0,0,0.4);}
+.ix:hover,.ix.on{border-color:rgba(255,255,255,0.25);color:#fff;background:rgba(0,0,0,0.6);}
+.ixd{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* TIMELINE */
+.tl{position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:20px;z-index:20;
+  border-left:1px solid rgba(255,255,255,0.1);padding-left:14px;}
+.ti{cursor:pointer;transition:all 0.25s;opacity:0.35;}
+.ti:hover,.ti.v{opacity:1;}
+.ty{font-family:'Bebas Neue',sans-serif;font-size:20px;color:#00f0ff;line-height:1;}
+.tn{font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;margin-top:2px;}
+.vm{display:none;width:5px;height:5px;border-radius:50%;margin-top:4px;}
+.ti.v .vm{display:block;}
+
+/* PANEL */
+.panel{position:absolute;top:50%;right:16px;transform:translateY(-50%);
+  width:232px;background:rgba(4,3,14,0.96);
+  border:1px solid rgba(255,255,255,0.12);border-radius:4px;
+  padding:16px;display:none;z-index:40;backdrop-filter:blur(8px);}
+.panel.on{display:block;}
+.px{position:absolute;top:10px;right:12px;cursor:pointer;
+  color:rgba(255,255,255,0.3);font-size:13px;transition:color 0.2s;}
+.px:hover{color:#fff;}
+.pimg{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.15);margin-bottom:10px;display:block;}
+.pav{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px;margin-bottom:10px;border:2px solid rgba(255,255,255,0.1);}
+.poimg{width:100%;height:76px;object-fit:cover;border-radius:3px;margin-bottom:10px;display:block;}
+.poph{width:100%;height:76px;border-radius:3px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:8px;letter-spacing:2px;color:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.07);}
+.panel h2{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;margin-bottom:2px;line-height:1;letter-spacing:1px;}
+.pyr{font-size:8px;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-bottom:9px;}
+.ptag{display:inline-block;font-size:8px;letter-spacing:2px;padding:3px 9px;border-radius:1px;margin-bottom:9px;}
+.pm{margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,0.06);}
+.pml{font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,0.25);margin-bottom:2px;}
+.pmv{font-size:10px;color:rgba(255,255,255,0.65);line-height:1.55;}
+
+.vc{position:absolute;top:14px;right:16px;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.2);pointer-events:none;z-index:10;}
+</style>
+
+<div id="cr">
+  <canvas id="bg"></canvas>
+  <canvas id="cv"></canvas>
+  <div class="scan"></div>
+  <div class="hdr">CARTOGRAFÍA VISUAL · ARTES MULTIMEDIALES</div>
+  <div class="mode-banner" id="mbanner"></div>
+  <div class="hint" id="hint">ARRASTRÁ LOS NODOS · HACÉ CLICK PARA EXPLORAR</div>
+
+  <div class="tl">
+    <div class="ti" id="tl1" onclick="fA(1)"><div class="ty">1999</div><div class="tn">D. ROZIN</div><div class="vm" style="background:#3d7fff"></div></div>
+    <div class="ti" id="tl2" onclick="fA(2)"><div class="ty">2018</div><div class="tn">A.L. CANTERA</div><div class="vm" style="background:#00e87a"></div></div>
+    <div class="ti" id="tl3" onclick="fA(3)"><div class="ty">2018</div><div class="tn">S. BERDUCCY</div><div class="vm" style="background:#ff9900"></div></div>
+  </div>
+
+  <div class="idx">
+    <div class="ix on" data-f="all" onclick="filt('all')"><div class="ixd" style="background:#fff"></div>TODOS</div>
+    <div class="ix" data-f="mec" onclick="filt('mec')"><div class="ixd" style="background:#3d7fff"></div>EJE MECÁNICO</div>
+    <div class="ix" data-f="bio" onclick="filt('bio')"><div class="ixd" style="background:#00e87a"></div>EJE BIOARTE</div>
+    <div class="ix" data-f="anc" onclick="filt('anc')"><div class="ixd" style="background:#ff9900"></div>EJE ANCESTRAL</div>
+    <div class="ix" data-f="con" onclick="filt('con')"><div class="ixd" style="background:#b39dff"></div>HIPÓTESIS</div>
+  </div>
+
+  <div class="vc" id="vc">OBRAS VISITADAS: 0 / 3</div>
+
+  <div class="panel" id="pan"><span class="px" onclick="closePan()">✕</span><div id="pcon"></div></div>
+</div>
+
+<script>
+const RAW={
+  cantera_foto:'https://raw.githubusercontent.com/DanaJose/Tarea-de-Pirotta/main/Tarea%20de%20Pirotta/cantera.jpg.jpeg',
+  cantera_obra:'https://raw.githubusercontent.com/DanaJose/Tarea-de-Pirotta/main/Tarea%20de%20Pirotta/obra_cantera.jpg.jpeg',
+  rozin_foto:  'https://raw.githubusercontent.com/DanaJose/Tarea-de-Pirotta/main/Tarea%20de%20Pirotta/rozin.jpg.jpeg',
+  rozin_obra:  'https://raw.githubusercontent.com/DanaJose/Tarea-de-Pirotta/main/Tarea%20de%20Pirotta/obra_rozin.jpg.jpeg',
+  sandra_foto: 'https://raw.githubusercontent.com/DanaJose/Tarea-de-Pirotta/main/Tarea%20de%20Pirotta/sandra.jpg.jpeg',
+  sandra_obra: 'https://raw.githubusercontent.com/DanaJose/Tarea-de-Pirotta/main/Tarea%20de%20Pirotta/obrade_sandra.jpg.jpg',
+  hipotesis:   'https://raw.githubusercontent.com/DanaJose/Tarea-de-Pirotta/main/Hipotesis.jpg.jpg'
+};
+const IMGS={};
+Object.entries(RAW).forEach(([k,v])=>{const i=new Image();i.crossOrigin='anonymous';i.src=v;IMGS[k]=i;});
+
+// ── Background ──────────────────────────────────────────────────
+const BG=document.getElementById('bg'), BX=BG.getContext('2d');
+const STARS=Array.from({length:180},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.1+.2,a:Math.random()*.7+.1,sp:Math.random()*.008+.002}));
+const NEBS=[
+  {x:.15,y:.25,rx:260,ry:180,col:'#0a0060',a:.55},
+  {x:.82,y:.7,rx:220,ry:200,col:'#001a10',a:.5},
+  {x:.5,y:.5,rx:300,ry:220,col:'#050025',a:.4},
+  {x:.3,y:.78,rx:180,ry:140,col:'#200008',a:.35},
+  {x:.75,y:.2,rx:200,ry:160,col:'#00101a',a:.4}
+];
+function drawBG(t){
+  const w=BG.width,h=BG.height;
+  BX.clearRect(0,0,w,h);
+  const base=BX.createLinearGradient(0,0,w,h);
+  base.addColorStop(0,'#020008');base.addColorStop(.4,'#03020e');base.addColorStop(1,'#010008');
+  BX.fillStyle=base;BX.fillRect(0,0,w,h);
+  NEBS.forEach((nb,i)=>{
+    const pulse=Math.sin(t*.008+i*1.3)*.15+1;
+    BX.save();BX.globalAlpha=nb.a*pulse;
+    const grd=BX.createRadialGradient(nb.x*w,nb.y*h,0,nb.x*w,nb.y*h,Math.max(nb.rx,nb.ry)*pulse);
+    grd.addColorStop(0,nb.col+'ff');grd.addColorStop(.5,nb.col+'88');grd.addColorStop(1,nb.col+'00');
+    BX.fillStyle=grd;BX.save();BX.translate(nb.x*w,nb.y*h);
+    BX.scale(nb.rx/Math.max(nb.rx,nb.ry),nb.ry/Math.max(nb.rx,nb.ry));
+    BX.beginPath();BX.arc(0,0,Math.max(nb.rx,nb.ry)*pulse,0,Math.PI*2);BX.fill();
+    BX.restore();BX.restore();
+  });
+  STARS.forEach(s=>{
+    const tw=Math.sin(t*s.sp*2+s.x*100)*.5+.5;
+    BX.globalAlpha=s.a*(.5+.5*tw);BX.fillStyle='#ffffff';
+    BX.beginPath();BX.arc(s.x*w,s.y*h,s.r*(0.7+0.3*tw),0,Math.PI*2);BX.fill();
+  });
+  BX.save();BX.globalAlpha=.07+.04*Math.sin(t*.005);
+  const aur=BX.createLinearGradient(0,h*.3,w,h*.6);
+  aur.addColorStop(0,'rgba(0,200,255,0)');aur.addColorStop(.3,'rgba(0,100,200,.6)');
+  aur.addColorStop(.5,'rgba(80,0,180,.4)');aur.addColorStop(.7,'rgba(0,180,120,.5)');
+  aur.addColorStop(1,'rgba(0,200,255,0)');
+  BX.fillStyle=aur;BX.fillRect(0,h*.25,w,h*.25);BX.restore();BX.globalAlpha=1;
+}
+
+// ── Physics nodes ───────────────────────────────────────────────
+const C=document.getElementById('cv'),X=C.getContext('2d'),ROOT=document.getElementById('cr');
+
+const ND={
+  user:{id:'user',lbl:'TÚ',sub:'USUARIO',col:'#ffffff',bx:.5,by:.5,sz:30,star:true,flt:'user',
+        vx:0,vy:0,pinned:false,mass:3},
+  center:{id:'center',lbl:'ARTES\nMULTI-\nMEDIALES',col:'#b39dff',bx:.5,by:.13,sz:22,flt:'con',
+          vx:0,vy:0,pinned:false,mass:2,
+    info:{title:'Hipótesis',year:'Análisis Comparativo',tag:'SÍNTESIS',tc:'#1a1540',tt:'#b39dff',
+      ak:null,init:'AM',ab:'#1a1540',at:'#b39dff',ok:'hipotesis',ol:'HIPÓTESIS',oc:'#12103a',
+      h:'Las tres obras operan como sistemas híbridos: tecnología + cuerpo + cultura.',
+      p:'El usuario es co-autor, ecosistema y activador — nunca espectador.',
+      hm:'El cuerpo humano como interfaz universal, del pixel a la fibra ancestral.'}},
+  rozin:{id:'rozin',lbl:'DANIEL\nROZIN',col:'#3d7fff',bx:.22,by:.36,sz:21,flt:'mec',artist:true,tl:1,
+         vx:0,vy:0,pinned:false,mass:1.5,
+    info:{title:'Daniel Rozin',year:'1999 — Wooden Mirror',tag:'EJE MECÁNICO',tc:'#08142e',tt:'#3d7fff',
+      ak:'rozin_foto',init:'DR',ab:'#08142e',at:'#3d7fff',ok:'rozin_obra',ol:'WOODEN MIRROR',oc:'#0a1020',
+      h:'Alta. Software digital → movimiento físico en madera y motores.',
+      p:'Máxima. El usuario es el motor del movimiento.',
+      hm:'Interactividad en tiempo real sin almacenamiento persistente.',
+      mode:'direct', modeLabel:'INTERACCIÓN DIRECTA', modeTip:'EL USUARIO MUEVE LA OBRA'}},
+  cantera:{id:'cantera',lbl:'ANA LAURA\nCANTERA',col:'#00e87a',bx:.78,by:.36,sz:21,flt:'bio',artist:true,tl:2,
+           vx:0,vy:0,pinned:false,mass:1.5,
+    info:{title:'Ana Laura Cantera',year:'2018 — Bio-Robótica',tag:'EJE BIOARTE',tc:'#00140a',tt:'#00e87a',
+      ak:'cantera_foto',init:'AC',ab:'#001a0c',at:'#00e87a',ok:'cantera_obra',ol:'HONGO-MÁQUINA',oc:'#001a0c',
+      h:'Transdisciplinar. Hongo vivo (cerebro) + máquina cyborg.',
+      p:'Contemplativa/Ecosistémica. Sin control directo.',
+      hm:'Sistema vivo que almacena y procesa datos ambientales.',
+      mode:'ecosystem', modeLabel:'RELACIÓN ECOSISTÉMICA', modeTip:'EL USUARIO ES PARTE DEL AMBIENTE'}},
+  berduccy:{id:'berduccy',lbl:'SANDRA DE\nBERDUCCY',col:'#ff9900',bx:.5,by:.73,sz:21,flt:'anc',artist:true,tl:3,
+            vx:0,vy:0,pinned:false,mass:1.5,
+    info:{title:'Sandra de Berduccy',year:'2018 — Tejido-Circuito',tag:'EJE ANCESTRAL',tc:'#1a0900',tt:'#ff9900',
+      ak:'sandra_foto',init:'SB',ab:'#1f0c00',at:'#ff9900',ok:'sandra_obra',ol:'TELAR-BINARIO',oc:'#180a00',
+      h:'Binario-Textil. El hilo es simultáneamente trama y cable.',
+      p:'Ritual/Táctica. Requiere energía electromagnética del cuerpo.',
+      hm:'Anticipación del código digital con tecnologías milenarias.',
+      mode:'ritual', modeLabel:'TACTO RITUAL', modeTip:'EL USUARIO ACTIVA CON SU CUERPO'}},
+  int:{id:'int',lbl:'INTERACCIÓN\nDIRECTA',col:'#3d7fff',bx:.28,by:.6,sz:11,flt:'mec',par:'rozin',vx:0,vy:0,pinned:false,mass:1},
+  eco:{id:'eco',lbl:'RELACIÓN\nECOSISTÉM.',col:'#00e87a',bx:.72,by:.6,sz:11,flt:'bio',par:'cantera',vx:0,vy:0,pinned:false,mass:1},
+  rit:{id:'rit',lbl:'TACTO\nRITUAL',col:'#ff9900',bx:.88,by:.73,sz:11,flt:'anc',par:'berduccy',vx:0,vy:0,pinned:false,mass:1}
+};
+
+const ED=[
+  {f:'user',t:'center',tp:'main',restLen:180},
+  {f:'user',t:'rozin',tp:'main',restLen:200},
+  {f:'user',t:'cantera',tp:'main',restLen:200},
+  {f:'user',t:'berduccy',tp:'main',restLen:200},
+  {f:'center',t:'rozin',tp:'sec',restLen:160},
+  {f:'center',t:'cantera',tp:'sec',restLen:160},
+  {f:'center',t:'berduccy',tp:'sec',restLen:160},
+  {f:'rozin',t:'int',tp:'sub',restLen:90},
+  {f:'cantera',t:'eco',tp:'sub',restLen:90},
+  {f:'berduccy',t:'rit',tp:'sub',restLen:90},
+  {f:'user',t:'int',tp:'dash',restLen:220},
+  {f:'user',t:'eco',tp:'dash',restLen:220},
+  {f:'user',t:'rit',tp:'dash',restLen:220}
+];
+
+const ST={vis:{},flt:'all',hov:null,t:0,drag:null,dragOffX:0,dragOffY:0,activeMode:null};
+
+const LAYOUTS={
+  default:{
+    user:{x:.5,y:.5},center:{x:.5,y:.14},
+    rozin:{x:.22,y:.36},cantera:{x:.78,y:.36},berduccy:{x:.5,y:.73},
+    int:{x:.28,y:.6},eco:{x:.72,y:.6},rit:{x:.5,y:.88}
+  },
+  rozin:{
+    user:{x:.28,y:.5},center:{x:.5,y:.1},
+    rozin:{x:.65,y:.5},cantera:{x:.82,y:.22},berduccy:{x:.82,y:.78},
+    int:{x:.65,y:.72},eco:{x:.72,y:.35},rit:{x:.72,y:.65}
+  },
+  cantera:{
+    user:{x:.15,y:.5},center:{x:.5,y:.1},
+    rozin:{x:.18,y:.25},cantera:{x:.62,y:.5},berduccy:{x:.18,y:.75},
+    int:{x:.25,y:.38},eco:{x:.62,y:.72},rit:{x:.25,y:.62}
+  },
+  berduccy:{
+    user:{x:.42,y:.55},center:{x:.5,y:.1},
+    rozin:{x:.15,y:.3},cantera:{x:.82,y:.3},berduccy:{x:.55,y:.55},
+    int:{x:.2,y:.5},eco:{x:.8,y:.5},rit:{x:.55,y:.75}
+  }
+};
+
+function resize(){
+  BG.width=C.width=ROOT.offsetWidth;
+  BG.height=C.height=ROOT.offsetHeight;
+  Object.keys(ND).forEach(id=>{
+    const n=ND[id];
+    if(!n.x){n.x=n.bx*C.width;n.y=n.by*C.height;}
+  });
+}
+resize();
+window.addEventListener('resize',resize);
+
+function applyLayout(layoutKey){
+  const lay=LAYOUTS[layoutKey]||LAYOUTS.default;
+  ST.activeMode=layoutKey;
+  Object.keys(lay).forEach(id=>{
+    if(ND[id]&&!ND[id].pinned){
+      ND[id].tx=lay[id].x*C.width;
+      ND[id].ty=lay[id].y*C.height;
+    }
+  });
+}
+applyLayout('default');
+
+function resetLayout(){
+  applyLayout('default');
+  ST.activeMode='default';
+  hideBanner();
+}
+
+function showBanner(text,col){
+  const b=document.getElementById('mbanner');
+  b.textContent=text;
+  b.style.color=col;
+  b.style.borderBottom=`1px solid ${col}44`;
+  b.classList.add('show');
+  setTimeout(()=>b.classList.remove('show'),3000);
+}
+function hideBanner(){document.getElementById('mbanner').classList.remove('show');}
+
+function physicsStep(){
+  const damp=0.82, spring=0.055, repulse=2200;
+  const ids=Object.keys(ND);
+
+  ids.forEach(id=>{
+    const n=ND[id];
+    if(n.pinned||!n.tx) return;
+    const dx=n.tx-n.x, dy=n.ty-n.y;
+    n.vx+=dx*spring; n.vy+=dy*spring;
+  });
+
+  ED.forEach(e=>{
+    const a=ND[e.f],b=ND[e.t];
+    if(!a||!b) return;
+    const dx=b.x-a.x, dy=b.y-a.y;
+    const dist=Math.sqrt(dx*dx+dy*dy)||1;
+    const force=(dist-e.restLen)*0.008;
+    const fx=dx/dist*force, fy=dy/dist*force;
+    if(!a.pinned){a.vx+=fx/a.mass; a.vy+=fy/a.mass;}
+    if(!b.pinned){b.vx-=fx/b.mass; b.vy-=fy/b.mass;}
+  });
+
+  for(let i=0;i<ids.length;i++){
+    for(let j=i+1;j<ids.length;j++){
+      const a=ND[ids[i]],b=ND[ids[j]];
+      const dx=b.x-a.x, dy=b.y-a.y;
+      const dist2=dx*dx+dy*dy||1;
+      const dist=Math.sqrt(dist2);
+      const minD=(a.sz+b.sz)*2.5;
+      if(dist<minD){
+        const f=(minD-dist)/dist*0.15;
+        if(!a.pinned){a.vx-=dx*f/a.mass; a.vy-=dy*f/a.mass;}
+        if(!b.pinned){b.vx+=dx*f/b.mass; b.vy+=dy*f/b.mass;}
+      }
+    }
+  }
+
+  ids.forEach(id=>{
+    const n=ND[id];
+    if(n.pinned) return;
+    n.vx*=damp; n.vy*=damp;
+    n.x+=n.vx; n.y+=n.vy;
+    const margin=n.sz+10;
+    if(n.x<margin){n.x=margin;n.vx*=-.5;}
+    if(n.x>C.width-margin){n.x=C.width-margin;n.vx*=-.5;}
+    if(n.y<margin){n.y=margin;n.vy*=-.5;}
+    if(n.y>C.height-margin){n.y=C.height-margin;n.vy*=-.5;}
+  });
+}
+
+function nAlpha(n){
+  if(ST.flt==='all'||n.id==='user') return 1;
+  return n.flt===ST.flt?1:.07;
+}
+function h2rgb(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+
+function drawEdge(e){
+  const a=ND[e.f],b=ND[e.t];
+  if(!a||!b) return;
+  const al=Math.min(nAlpha(a),nAlpha(b));
+  const col=ND[e.t].col||'#fff';
+  X.save();
+  const baseA=e.tp==='main'?.4:e.tp==='sec'?.14:e.tp==='sub'?.5:.11;
+  X.globalAlpha=al*baseA;
+  if(e.tp==='dash') X.setLineDash([4,7]); else X.setLineDash([]);
+  if(e.tp==='main'&&al>.5){X.shadowBlur=10;X.shadowColor=col;}
+  X.strokeStyle=col; X.lineWidth=e.tp==='main'?1.6:e.tp==='sub'?1.2:.6;
+  X.beginPath();X.moveTo(a.x,a.y);X.lineTo(b.x,b.y);X.stroke();
+  X.restore();
+}
+
+function drawStar(x,y,r,col){
+  const o=r,i=r*.42,sp=5,s=Math.PI/sp,rot=-Math.PI/2;
+  X.beginPath();
+  for(let k=0;k<sp*2;k++){
+    const rad=k%2===0?o:i,ang=rot+k*s;
+    k===0?X.moveTo(x+Math.cos(ang)*rad,y+Math.sin(ang)*rad)
+         :X.lineTo(x+Math.cos(ang)*rad,y+Math.sin(ang)*rad);
+  }
+  X.closePath();X.fillStyle=col;X.fill();
+}
+
+function drawCircImg(img,x,y,r){
+  if(!img||!img.complete||!img.naturalWidth) return false;
+  X.save();X.beginPath();X.arc(x,y,r,0,Math.PI*2);X.clip();
+  X.drawImage(img,x-r,y-r,r*2,r*2);X.restore();return true;
+}
+
+function drawNode(n){
+  const al=nAlpha(n);
+  const hov=ST.hov===n.id;
+  const vis=ST.vis[n.id]||0;
+  const pulse=Math.sin(ST.t*.045+(n.id==='user'?0:n.id.charCodeAt(0)*.3))*.5+.5;
+  const r=n.sz+(hov?5:0)+(n.pinned?3:0);
+  const col=n.col;
+  const [cr,cg,cb]=h2rgb(col);
+
+  X.save();
+
+  if(n.star){
+    X.globalAlpha=al*.2*(0.6+0.4*pulse);
+    const g1=X.createRadialGradient(n.x,n.y,0,n.x,n.y,r*4);
+    g1.addColorStop(0,'rgba(255,255,255,.9)');g1.addColorStop(1,'rgba(255,255,255,0)');
+    X.fillStyle=g1;X.beginPath();X.arc(n.x,n.y,r*4,0,Math.PI*2);X.fill();
+    X.globalAlpha=al;
+    drawStar(n.x,n.y,r,'#ffffff');
+    drawStar(n.x,n.y,r*.5,'#020008');
+    X.save();X.translate(n.x,n.y);X.rotate(ST.t*.012);
+    X.globalAlpha=al*.4;X.strokeStyle='rgba(255,255,255,.7)';X.lineWidth=.6;X.setLineDash([5,9]);
+    X.beginPath();X.arc(0,0,r*2.2,0,Math.PI*2);X.stroke();X.restore();
+    X.save();X.translate(n.x,n.y);X.rotate(-ST.t*.007);
+    X.globalAlpha=al*.2;X.strokeStyle='rgba(255,255,255,.4)';X.lineWidth=.4;X.setLineDash([2,14]);
+    X.beginPath();X.arc(0,0,r*3,0,Math.PI*2);X.stroke();X.restore();
+  } else {
+    if(vis>0||hov){
+      X.globalAlpha=al*(hov?.32:.2)*(0.5+0.5*pulse);
+      const g2=X.createRadialGradient(n.x,n.y,r*.4,n.x,n.y,r*3.2);
+      g2.addColorStop(0,`rgba(${cr},${cg},${cb},.95)`);g2.addColorStop(1,`rgba(${cr},${cg},${cb},0)`);
+      X.fillStyle=g2;X.beginPath();X.arc(n.x,n.y,r*3.2,0,Math.PI*2);X.fill();
+    }
+    X.globalAlpha=al;
+    const imgDrawn=n.info&&n.info.ak?drawCircImg(IMGS[n.info.ak],n.x,n.y,r):false;
+    if(!imgDrawn){
+      X.beginPath();X.arc(n.x,n.y,r,0,Math.PI*2);
+      X.fillStyle=vis>0?`rgba(${cr},${cg},${cb},.22)`:`rgba(${cr},${cg},${cb},.07)`;X.fill();
+    }
+    X.save();
+    if(vis>0){X.translate(n.x,n.y);X.rotate(ST.t*.009);X.translate(-n.x,-n.y);}
+    X.strokeStyle=col;X.lineWidth=vis>0?2.2:1;
+    X.globalAlpha=al*(vis>0?.95:.4);
+    X.setLineDash(vis>0?[6,3]:[]);
+    X.shadowBlur=vis>0?16:0;X.shadowColor=col;
+    X.beginPath();X.arc(n.x,n.y,r,0,Math.PI*2);X.stroke();X.restore();
+
+    if(vis>0){
+      for(let i=0;i<Math.min(vis,3);i++){
+        const ang=ST.t*.032+(i*Math.PI*2/3);
+        X.beginPath();
+        X.arc(n.x+Math.cos(ang)*(r+16),n.y+Math.sin(ang)*(r+16),3.5,0,Math.PI*2);
+        X.fillStyle=col;X.globalAlpha=al*.85;X.shadowBlur=8;X.shadowColor=col;X.fill();
+      }
+    }
+  }
+
+  X.globalAlpha=al;
+  const lines=n.lbl.split('\n');
+  const hasImg=n.info&&n.info.ak&&IMGS[n.info.ak]?.complete&&IMGS[n.info.ak]?.naturalWidth>0;
+  X.fillStyle=n.star?'#fff':(vis>0&&!hasImg?'#fff':col);
+  X.shadowBlur=vis>0&&!n.star?8:0;X.shadowColor=col;
+  X.font=`700 ${n.sz>18?9:8}px 'Space Mono',monospace`;
+  X.textAlign='center';X.textBaseline='middle';
+  const ly0=n.y+r+12;
+  lines.forEach((ln,i)=>X.fillText(ln,n.x,ly0+i*11));
+  if(n.sub){
+    X.globalAlpha=al*.4;X.shadowBlur=0;
+    X.font=`400 7px 'Space Mono',monospace`;X.fillStyle='#fff';
+    X.fillText(n.sub,n.x,ly0+lines.length*11+3);
+  }
+  X.restore();
+}
+
+function draw(){
+  X.clearRect(0,0,C.width,C.height);
+  ED.forEach(drawEdge);
+  Object.values(ND).forEach(n=>{if(n.id!=='user')drawNode(n);});
+  drawNode(ND.user);
+}
+
+function anim(){
+  ST.t++;
+  physicsStep();
+  drawBG(ST.t);
+  draw();
+  requestAnimationFrame(anim);
+}
+
+// ── Drag ────────────────────────────────────────────────────────
+function getPos(e){
+  const rc=C.getBoundingClientRect();
+  if(e.touches) return{x:e.touches[0].clientX-rc.left,y:e.touches[0].clientY-rc.top};
+  return{x:e.clientX-rc.left,y:e.clientY-rc.top};
+}
+function nodeAt(mx,my){
+  for(const id of Object.keys(ND)){
+    const n=ND[id],r=n.sz+14;
+    if(Math.sqrt((mx-n.x)**2+(my-n.y)**2)<r) return id;
+  }
+  return null;
+}
+
+let dragId=null,didDrag=false,dragSx=0,dragSy=0;
+
+function onDown(e){
+  const {x,y}=getPos(e);
+  const hit=nodeAt(x,y);
+  if(hit){
+    dragId=hit;didDrag=false;dragSx=x;dragSy=y;
+    ND[hit].pinned=true;
+    ROOT.classList.add('dragging');
+    e.preventDefault();
+  }
+}
+function onMove(e){
+  const {x,y}=getPos(e);
+  if(dragId){
+    if(Math.abs(x-dragSx)>4||Math.abs(y-dragSy)>4) didDrag=true;
+    ND[dragId].x=x; ND[dragId].y=y;
+    ND[dragId].vx=0; ND[dragId].vy=0;
+    e.preventDefault();
+  }
+  ST.hov=nodeAt(x,y);
+  C.style.cursor=ST.hov?'pointer':'default';
+}
+function onUp(e){
+  if(dragId){
+    const n=ND[dragId];
+    n.pinned=false;
+    if(didDrag){
+      const {x,y}=getPos(e.changedTouches?{changedTouches:e.changedTouches}:{clientX:e.clientX,clientY:e.clientY})||{x:n.x,y:n.y};
+    }
+    if(!didDrag&&dragId!=='user'){
+      recVis(dragId);
+      showPan(dragId);
+      activateArtistLayout(dragId);
+    }
+    dragId=null;
+    ROOT.classList.remove('dragging');
+  }
+}
+
+C.addEventListener('mousedown',onDown);
+C.addEventListener('mousemove',onMove);
+C.addEventListener('mouseup',onUp);
+C.addEventListener('touchstart',onDown,{passive:false});
+C.addEventListener('touchmove',onMove,{passive:false});
+C.addEventListener('touchend',onUp);
+
+function activateArtistLayout(id){
+  if(!ND[id]||!ND[id].artist) return;
+  const info=ND[id].info;
+  applyLayout(id);
+  showBanner(info.modeTip||'',ND[id].col);
+}
+
+function recVis(id){
+  ST.vis[id]=(ST.vis[id]||0)+1;
+  const n=ND[id];
+  if(n&&n.artist) document.getElementById('tl'+n.tl)?.classList.add('v');
+  const cnt=['rozin','cantera','berduccy'].filter(i=>ST.vis[i]).length;
+  document.getElementById('vc').textContent='OBRAS VISITADAS: '+cnt+' / 3';
+}
+
+function fA(tl){
+  const id=['rozin','cantera','berduccy'][tl-1];
+  recVis(id);showPan(id);activateArtistLayout(id);
+}
+
+function filt(f){
+  ST.flt=f;
+  document.querySelectorAll('.ix').forEach(el=>el.classList.toggle('on',el.dataset.f===f));
+}
+
+function showPan(id){
+  const n=ND[id];if(!n||!n.info) return;
+  const i=n.info;
+  let h='';
+  const aimg=i.ak&&IMGS[i.ak]?.complete&&IMGS[i.ak]?.naturalWidth>0;
+  if(aimg) h+=`<img class="pimg" src="${RAW[i.ak]}" alt="${i.title}"/>`;
+  else h+=`<div class="pav" style="background:${i.ab};color:${i.at}">${i.init}</div>`;
+  const oimg=i.ok&&IMGS[i.ok]?.complete&&IMGS[i.ok]?.naturalWidth>0;
+  if(oimg) h+=`<img class="poimg" src="${RAW[i.ok]}" alt="${i.ol}"/>`;
+  else h+=`<div class="poph" style="background:${i.oc}">${i.ol}</div>`;
+  h+=`<h2>${i.title}</h2><div class="pyr">${i.year}</div>`;
+  h+=`<span class="ptag" style="background:${i.tc};color:${i.tt}">${i.tag}</span>`;
+  if(i.modeTip) h+=`<div class="pm"><div class="pml">MODO DE INTERACCIÓN</div><div class="pmv" style="color:${n.col}">${i.modeTip}</div></div>`;
+  h+=`<div class="pm"><div class="pml">HIBRIDACIÓN</div><div class="pmv">${i.h}</div></div>`;
+  h+=`<div class="pm"><div class="pml">PARTICIPACIÓN</div><div class="pmv">${i.p}</div></div>`;
+  h+=`<div class="pm"><div class="pml">HIPERMEDIALIDAD</div><div class="pmv">${i.hm}</div></div>`;
+  document.getElementById('pcon').innerHTML=h;
+  document.getElementById('pan').classList.add('on');
+}
+
+function closePan(){
+  document.getElementById('pan').classList.remove('on');
+  resetLayout();
+}
+
+filt('all');
+anim();
+</script>
